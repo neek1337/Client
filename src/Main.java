@@ -1,11 +1,6 @@
 import java.io.*;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.Scanner;
-import java.util.concurrent.SynchronousQueue;
-
-import static java.lang.System.in;
-import static java.lang.System.out;
 
 /**
  * Created by neek on 06.05.16.
@@ -16,31 +11,30 @@ public class Main implements Runnable {
     private static PrintWriter out;
     private static final Object monitor = new Object();
     private static boolean ready = false;
+    private static Thread thread;
 
     public static void main(String[] args) throws IOException {
         System.out.println("Добро пожаловать!");
         scanner = new Scanner(System.in);
-        new Thread(new Main()).start();
-        String answer = scanner.next().toLowerCase();
-        switch (answer) {
-            case "connect":
-                try {
-                    connect(scanner.next(), scanner.next());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+        while (true) {
+            thread = new Thread(new Main());
+            thread.start();
+            String answer = scanner.next().toLowerCase();
+            switch (answer) {
+                case "connect":
+                    try {
+                        connect(scanner.next(), scanner.next());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case "exit":
+                    thread.stop();
+                    return;
+                default:
+                    System.out.println("Введена неврная команда! Доступные команды: onnect server_name[:port] UserName и exit");
+            }
         }
-
-
-//        String fuser, fserver;
-//
-//        while ((fuser = inu.readLine()) != null) {
-//            out.println(fuser);
-//            fserver = in.readLine();
-//            System.out.println(fserver);
-//            if (fuser.equalsIgnoreCase("close")) break;
-//            if (fuser.equalsIgnoreCase("exit")) break;
-//        }
 
     }
 
@@ -95,8 +89,15 @@ public class Main implements Runnable {
             monitor.notifyAll();
         }
         out.println(name);
+        String response;
         while (scanner.hasNextLine()) {
-            out.println(scanner.nextLine());
+            response = scanner.nextLine();
+            out.println(response);
+            if (response.equalsIgnoreCase("quit")) {
+                thread.stop();
+                ready = false;
+                break;
+            }
         }
 
         out.close();
